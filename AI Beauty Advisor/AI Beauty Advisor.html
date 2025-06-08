@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Beauty Advisor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles from both apps */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* Upload section styles */
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(45deg, #f8fafc, #f1f5f9);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: linear-gradient(45deg, #f0f4ff, #e0e7ff);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(102, 126, 234, 0.2);
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: linear-gradient(45deg, #e0e7ff, #c7d2fe);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #94a3b8;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            color: #475569;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtext {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* Preview and Results styles */
+        .preview-container {
+            margin: 30px 0;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        #preview {
+            width: 280px;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 20px;
+            margin: 0 auto;
+            display: block;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.3);
+            border: 4px solid white;
+        }
+
+        .analyze-btn, .recommend-btn {
+            width: 100%;
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .analyze-btn:hover, .recommend-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(102, 126, 234, 0.4);
+        }
+
+        .analyze-btn:active, .recommend-btn:active {
+            transform: translateY(0);
+        }
+
+        .analyze-btn:disabled, .recommend-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Results styles */
+        .results {
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #bae6fd;
+            animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .result-confidence {
+            font-size: 1rem;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 4px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Recommendations Modal styles */
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .recommendations-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-top: 20px;
+        }
+
+        .recommendations-table th {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            color: #0f172a;
+            font-weight: 600;
+            padding: 12px 16px;
+            text-align: left;
+            border-radius: 8px;
+        }
+
+        .recommendations-table td {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .recommendations-table tr:hover td {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .product-type {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .product-price {
+            font-weight: 600;
+            color: #059669;
+        }
+
+        .product-rating {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .star {
+            color: #fbbf24;
+        }
+
+        .budget-input {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .budget-input label {
+            display: block;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .budget-input input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .budget-input input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-transition.fade {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .modal-transition.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .recommend-btn {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+
+            #preview {
+                width: 240px;
+                height: 240px;
+            }
+
+            .modal-dialog {
+                margin: 10px;
+            }
+        }
+
+        .recommendations-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+            animation: slideIn 0.7s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+        }
+
+        .recommendations-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .table {
+            width: 100%;
+            min-width: 800px;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem 2rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 1rem;
+            text-align: left;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .table thead th:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 25%;
+            height: 50%;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .table tbody td {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .table tbody tr {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.08);
+            transform: scale(1.01);
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tbody td:first-child {
+            font-weight: 600;
+        }
+
+        .section-title {
+            color: var(--text-primary);
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .icon {
+            font-size: 1.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .recommendations-section {
+                padding: 1.5rem;
+                margin: 1rem 0;
+            }
+
+            .table thead th,
+            .table tbody td {
+                padding: 1rem 1.5rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        .table tbody td a {
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .table tbody td a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn-outline-primary {
+            color: #667eea;
+            border: 2px solid #667eea;
+            background: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1 class="title">AI Beauty Advisor</h1>
+            <p class="subtitle">Get personalized skin analysis and product recommendations</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">Upload Your Photo</div>
+                <div class="upload-subtext">Click to select • JPG, PNG up to 10MB</div>
+            </div>
+            <input type="file" id="file-input" accept="image/*">
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-container" id="preview-container">
+            <img id="preview" alt="Preview">
+        </div>
+
+        <!-- Analysis Button -->
+        <button class="analyze-btn" id="analyze-btn" onclick="predict()" disabled>
+            <div class="btn-text">
+                <div class="loading-spinner" id="loading-spinner"></div>
+                <span id="btn-text">Analyze Skin Type</span>
+            </div>
+        </button>
+
+        <!-- Results Section -->
+        <div class="results" id="results"></div>
+
+        <!-- Recommendations Section (initially hidden) -->
+        <div id="recommendations" class="recommendations-section" style="display: none;">
+            <h2 class="section-title">
+                <span class="icon">🎁</span> Recommended Products for Your Skin Type
+            </h2>
+            <div class="budget-input">
+                <label for="budget">
+                    <span class="icon">💰</span> Set Your Budget (Optional)
+                </label>
+                <input type="number" id="budget" placeholder="Enter your budget (e.g., 50.00)" step="0.01">
+                <button class="analyze-btn mt-3" onclick="getRecommendations()">
+                    <div class="btn-text">
+                        <span>Update Recommendations</span>
+                    </div>
+                </button>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Price</th>
+                            <th>Rating</th>
+                            <th>Available at</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recommendationsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configuration
+        const MODEL_URL = "/model.json?v=1";
+        const METADATA_URL = "/metadata.json?v=1";
+        
+        let model, image;
+        let currentSkinType = null;
+
+        // Get DOM elements
+        const fileInput = document.getElementById('file-input');
+        const previewContainer = document.getElementById('preview-container');
+        const preview = document.getElementById('preview');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const btnText = document.getElementById('btn-text');
+        const results = document.getElementById('results');
+        const recommendationsSection = document.getElementById('recommendations');
+        const recommendationsTableBody = document.getElementById('recommendationsTableBody');
+
+        // File input handler
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please select a valid image file (JPG, PNG, etc.)');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File size must be less than 10MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                previewContainer.style.display = 'block';
+                analyzeBtn.disabled = false;
+                
+                image = new Image();
+                image.src = e.target.result;
+                image.onload = function() {
+                    console.log('Image loaded successfully');
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function loadModel() {
+            try {
+                if (model) {
+                    console.log('Model already loaded');
+                    return;
+                }
+                
+                console.log('Loading AI model...');
+                if (typeof tmImage === 'undefined') {
+                    throw new Error('Teachable Machine library not loaded');
+                }
+                
+                model = await tmImage.load(MODEL_URL, METADATA_URL);
+                console.log('Model loaded successfully!');
+                console.log('Model classes:', model.getClassLabels());
+                
+            } catch (error) {
+                console.error('Model loading error:', error);
+                showError(`Failed to load AI model: ${error.message}`);
+                throw error;
+            }
+        }
+
+        async function predict() {
+            if (!image) {
+                showError("Please upload an image first");
+                return;
+            }
+
+            // Reset UI state
+            analyzeBtn.disabled = true;
+            loadingSpinner.style.display = 'block';
+            btnText.textContent = 'Analyzing...';
+            results.innerHTML = '';
+            recommendationsSection.style.display = 'none';
+
+            try {
+                if (!model) {
+                    await loadModel();
+                }
+
+                if (!model) {
+                    throw new Error("Model could not be loaded");
+                }
+
+                const predictions = await model.predict(image);
+                const topPrediction = predictions.reduce((max, p) =>
+                    p.probability > max.probability ? p : max
+                );
+
+                // Normalize skin type by trimming and mapping to backend values
+                const skinTypeMap = {
+                    'Dry Skin': 'Dry',
+                    'Normal Skin': 'Normal',
+                    'Normal Skin ': 'Normal',
+                    'Oily Skin': 'Oily'
+                };
+                currentSkinType = skinTypeMap[topPrediction.className.trim()] || topPrediction.className.trim();
+                const confidence = (topPrediction.probability * 100).toFixed(1);
+
+                showResult(topPrediction.className.trim(), confidence);
+
+            } catch (error) {
+                console.error('Prediction error:', error);
+                showError(error.message);
+            } finally {
+                analyzeBtn.disabled = false;
+                loadingSpinner.style.display = 'none';
+                btnText.textContent = 'Analyze Skin Type';
+            }
+        }
+
+        function showResult(skinType, confidence) {
+            const emoji = getSkinTypeEmoji(skinType);
+            
+            results.innerHTML = `
+                <div class="result-card">
+                    <div class="result-icon">${emoji}</div>
+                    <div class="result-title">${skinType}</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${confidence}%"></div>
+                    </div>
+                    <div class="result-confidence">Confidence: ${confidence}%</div>
+                    <div class="mt-3">
+                        <button class="recommend-btn" onclick="getRecommendations()">
+                            <div class="btn-text">
+                                <span>Get Product Recommendations</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            results.innerHTML = `
+                <div class="result-card error-card">
+                    <div class="result-icon">⚠️</div>
+                    <div class="result-title">Error</div>
+                    <div class="result-confidence">${message}</div>
+                </div>
+            `;
+        }
+
+        function getSkinTypeEmoji(skinType) {
+            const emojiMap = {
+                'Dry Skin': '🏜️',
+                'Normal Skin': '✨',
+                'Oily Skin': '💧'
+            };
+            return emojiMap[skinType] || '🔍';
+        }
+
+        async function getRecommendations() {
+            if (!currentSkinType) {
+                showError("Please analyze your skin type first");
+                return;
+            }
+
+            const budget = document.getElementById('budget').value;
+            
+            // Show loading state
+            recommendationsTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-4">
+                        <div class="loading-spinner" style="display: inline-block;"></div>
+                        <div class="mt-2">Finding your perfect products...</div>
+                    </td>
+                </tr>
+            `;
+
+            recommendationsSection.style.display = 'block';
+            recommendationsSection.scrollIntoView({ behavior: 'smooth' });
+
+            try {
+                const response = await fetch('/api/recommendations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        skin_type: currentSkinType,
+                        budget: budget ? parseFloat(budget) : null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (!data.recommendations || data.recommendations.length === 0) {
+                    recommendationsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="result-icon">🔍</div>
+                                <div class="result-title mt-2">No products found</div>
+                                <div class="result-confidence">Try adjusting your budget or preferences</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                // Display recommendations
+                recommendationsTableBody.innerHTML = '';
+                data.recommendations.forEach(product => {
+                    const row = document.createElement('tr');
+                    const productLink = product['Available at'] || '#';
+                    row.innerHTML = `
+                        <td>${product.brand} - ${product.name}</td>
+                        <td>${product.Label}</td>
+                        <td>${product.description || `${product.Label} for ${currentSkinType} skin`}</td>
+                        <td>$${product.price.toFixed(2)}</td>
+                        <td>${'⭐'.repeat(Math.floor(product.rank))} ${product.rank.toFixed(1)}</td>
+                        <td><a href="${productLink}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">View Product</a></td>
+                    `;
+                    recommendationsTableBody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Error getting recommendations:', error);
+                recommendationsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="result-icon">⚠️</div>
+                            <div class="result-title mt-2">Error Loading Recommendations</div>
+                            <div class="result-confidence">${error.message}</div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('AI Beauty Advisor initialized');
+        });
+    </script>
+</body>
+</html>
