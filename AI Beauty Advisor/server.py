@@ -4,6 +4,10 @@ import pandas as pd
 import os
 from openai import OpenAI
 import json
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Initialize Flask app with dotenv disabled
 app = Flask(__name__, static_url_path='')
@@ -14,9 +18,11 @@ CORS(app)  # Enable CORS for all routes
 # Define skin types
 skin_cols = ['Dry', 'Normal', 'Oily']
 
-# Initialize OpenAI client with direct API key
+# Initialize OpenAI client with API key from environment variable
 try:
-    OPENAI_API_KEY = "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"  # Replace with your actual API key
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+    if not OPENAI_API_KEY:
+        raise ValueError("OPENAI_API_KEY environment variable not set.")
     client = OpenAI(api_key=OPENAI_API_KEY)
     print("OpenAI client initialized successfully!")
 except Exception as e:
