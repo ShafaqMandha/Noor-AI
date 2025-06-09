@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmetic Product Recommender</title>
+    <title>Noor.AI Skincare Product Recommendation System</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --primary-gradient: linear-gradient(135deg, #ffb6c1 0%, #ffc0cb 100%);
+            --secondary-gradient: linear-gradient(135deg, #ffd1dc 0%, #ffb6c1 100%);
+            --accent-gradient: linear-gradient(135deg, #ffe4e1 0%, #ffb6c1 100%);
             --glass-bg: rgba(255, 255, 255, 0.25);
             --glass-border: rgba(255, 255, 255, 0.18);
             --text-primary: #2d3748;
             --text-secondary: #718096;
-            --shadow-soft: 0 8px 32px rgba(31, 38, 135, 0.37);
-            --shadow-hover: 0 15px 35px rgba(31, 38, 135, 0.5);
+            --shadow-soft: 0 8px 32px rgba(255, 182, 193, 0.37);
+            --shadow-hover: 0 15px 35px rgba(255, 182, 193, 0.5);
         }
 
         * {
@@ -27,7 +27,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(135deg, #ffb6c1 0%, #ffc0cb 50%, #ffd1dc 100%);
             min-height: 100vh;
             padding: 0;
             margin: 0;
@@ -41,7 +41,7 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(135deg, #ffb6c1 0%, #ffc0cb 50%, #ffd1dc 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
         }
@@ -183,7 +183,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.4);
             position: relative;
             overflow: hidden;
         }
@@ -205,8 +205,8 @@
 
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            box-shadow: 0 8px 25px rgba(255, 182, 193, 0.6);
+            background: linear-gradient(135deg, #ffc0cb 0%, #ffb6c1 100%);
         }
 
         .alert {
@@ -305,7 +305,7 @@
         }
 
         .table thead th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ffb6c1 0%, #ffc0cb 100%);
             color: white;
             border: none;
             padding: 1.5rem 2rem;
@@ -434,9 +434,9 @@
     <div class="container-fluid">
         <div class="glass-container">
             <h1 class="main-title">
-                <span class="icon">✨</span> Beauty Matchmaker <span class="icon">💄</span>
+                <span class="icon">✨</span> Noor.AI Skincare Product Recommendation System <span class="icon">💄</span>
             </h1>
-            <p class="subtitle">Discover your perfect cosmetic products tailored just for you</p>
+            <p class="subtitle">Discover your perfect skincare products tailored just for you</p>
             
             <form method="POST" id="recommenderForm">
                 <div class="mb-4">
