@@ -871,7 +871,7 @@
             window.recommendedProductsForNoor = recommendedProducts;
             window.sendNoorMessage = function() {
                 const input = document.getElementById('noor-chat-input');
-                const message = input.value.trim();
+            const message = input.value.trim();
                 if (!message) return;
                 addNoorMessage('You: ' + message, 'user');
                 input.value = '';
@@ -893,7 +893,7 @@
             };
             window.addNoorMessage = function(message, type) {
                 const messagesDiv = document.getElementById('noor-chat-messages');
-                const messageElement = document.createElement('div');
+            const messageElement = document.createElement('div');
                 messageElement.style.marginBottom = '10px';
                 messageElement.style.padding = '8px 12px';
                 messageElement.style.borderRadius = '8px';
