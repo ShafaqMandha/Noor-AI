@@ -6,7 +6,7 @@ from openai import OpenAI
 import json
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
 # Initialize Flask app with dotenv disabled
@@ -19,15 +19,7 @@ CORS(app)  # Enable CORS for all routes
 skin_cols = ['Dry', 'Normal', 'Oily']
 
 # Initialize OpenAI client with API key from environment variable
-try:
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-    if not OPENAI_API_KEY:
-        raise ValueError("OPENAI_API_KEY environment variable not set.")
-    client = OpenAI(api_key=OPENAI_API_KEY)
-    print("OpenAI client initialized successfully!")
-except Exception as e:
-    print(f"Error initializing OpenAI client: {str(e)}")
-    raise
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Load and clean the dataset
 try:
