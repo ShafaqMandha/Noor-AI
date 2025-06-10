@@ -1,6 +1,6 @@
 # Noor.AI
 
-Noor.AI is an AI-powered skincare assistant project designed to provide personalized beauty advice, analyse skin types, and recommend suitable skincare products. The project is organised into four main modules, each focusing on a specific aspect of the skincare experience.
+Noor.AI is an AI-powered skincare assistant project designed to provide personalised beauty advice, analyse skin types, and recommend suitable skincare products. The project is organised into four main modules, each focusing on a specific aspect of the skincare experience.
 
 ---
 
