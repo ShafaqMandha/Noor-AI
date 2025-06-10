@@ -15,6 +15,7 @@ This module offers personalised beauty advice based on AI analysis. A module com
 - **metadata.json** — Model metadata required for AI inference.
 - **model.json** — AI model architecture.
 - **requirements.txt** — List of Python dependencies needed to run this module.
+- **server.py** — Backend server script.
 - **weights.bin** — Pre-trained model weights for the AI.
 
 ---
