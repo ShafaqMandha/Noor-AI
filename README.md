@@ -1,6 +1,6 @@
 # Noor.AI
 
-Noor.AI is an AI-powered skincare assistant project designed to provide personalized beauty advice, analyse skin types, and recommend suitable skincare products. The project is organised into four main modules, each focusing on a specific aspect of the skincare experience.
+Noor.AI is an AI-powered skincare assistant project designed to provide personalised beauty advice, analyse skin types, and recommend suitable skincare products. The project is organised into four main modules, each focusing on a specific aspect of the skincare experience.
 
 ---
 
@@ -15,6 +15,7 @@ This module offers personalised beauty advice based on AI analysis. A module com
 - **metadata.json** — Model metadata required for AI inference.
 - **model.json** — AI model architecture.
 - **requirements.txt** — List of Python dependencies needed to run this module.
+- **server.py** — Backend server script.
 - **weights.bin** — Pre-trained model weights for the AI.
 
 ---
