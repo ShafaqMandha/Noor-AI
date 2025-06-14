@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noor.Ai</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-pink: #ffd1e6;
+            --secondary-pink: #ffeaf4;
+            --accent-pink: #ffb6d5;
+            --gradient-main: linear-gradient(135deg, #fff6fa 0%, #ffd1e6 100%);
+            --gradient-accent: linear-gradient(135deg, #ffeaf4 0%, #ffb6d5 100%);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 182, 213, 0.18);
+            --text-primary: #b23a48;
+            --text-secondary: #d36b8a;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--gradient-main);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--gradient-main);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.99);
+            max-width: 1200px;
+            width: 98vw;
+            min-height: auto;
+            box-shadow: 0 8px 32px rgba(255,182,213,0.15);
+            border-radius: 24px;
+            padding: 30px 24px;
+            margin: 32px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            flex: 1;
+            padding-bottom: 120px;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            -webkit-text-fill-color: unset !important;
+            background-clip: unset !important;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            color: #b23a48 !important;
+        }
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        /* Upload section styles */
+        .upload-section {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px; /* Space between upload area and instructions */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 2px dashed #b79cff; /* Dashed purple border */
+            border-radius: 50%; /* Make it a circle */
+            width: 280px; /* Fixed width for the circle */
+            height: 280px; /* Fixed height for the circle */
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #e0c8ff 0%, #b79cff 100%); /* Purple gradient background */
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; /* Ensure content within circle is clipped */
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .upload-area:hover {
+            border-color: #a084f7;
+            background: linear-gradient(135deg, #d4bbff 0%, #a084f7 100%);
+            transform: scale(1.02); /* Slightly larger hover effect */
+            box-shadow: 0 10px 25px -5px rgba(183, 156, 255, 0.4); /* Purple shadow */
+        }
+
+        .upload-area.dragover {
+            border-color: #a084f7;
+            background: linear-gradient(135deg, #d4bbff 0%, #a084f7 100%);
+            transform: scale(1.02);
+        }
+
+        .upload-area p {
+            color: #ffffff; /* White text for better contrast */
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .upload-area .main-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .upload-area .sub-text {
+            font-size: 0.9rem;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        #uploaded-image-preview {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cover the circular area */
+            border-radius: 50%;
+            display: none; /* Hidden by default */
+        }
+        #upload-instructions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Align text to the left */
+            justify-content: flex-start;
+            text-align: left;
+            width: auto; /* Adjust width based on content */
+            max-width: 300px; /* Max width for instructions */
+            padding-top: 20px; /* Align with the top of the circle */
+        }
+
+        .instructions-title {
+            color: #b23a48; /* Reddish color for the title */
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .instruction-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            color: #475569;
+        }
+
+        .instruction-item strong {
+            color: #b23a48; /* Bold text in reddish color */
+            margin-right: 8px;
+            white-space: nowrap; /* Prevent wrapping for bold text */
+        }
+
+        .privacy-note {
+            background-color: #e6ffe6; /* Light green background */
+            border-left: 5px solid #66bb6a; /* Green border on the left */
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #388e3c; /* Darker green text */
+            line-height: 1.5;
+        }
+
+        .privacy-note strong {
+            color: #2e7d32; /* Even darker green for bold text */
+        }
+        /* Buttons */
+        .upload-btn {
+            background: #ffb6d5; /* Pink button */
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 10px rgba(255, 182, 213, 0.3);
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+
+        .upload-btn:hover {
+            background: #ff9cc2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 182, 213, 0.4);
+        }
+
+        .upload-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(255, 182, 213, 0.2);
+        }
+        #file-input {
+            display: none;
+        }
+        /* Preview and Results styles */
+        .preview-container {
+            margin: 30px 0;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .analyze-btn, .recommend-btn, .btn, .recommendations-table td a, button {
+            background: linear-gradient(135deg, #ffd1e6 0%, #ffeaf4 100%) !important;
+            color: #b23a48 !important;
+            border: 2px solid #ffd1e6 !important;
+            border-radius: 12px !important;
+            font-weight: 600;
+            padding: 12px 24px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(255, 182, 213, 0.2);
+        }
+        .analyze-btn:hover, .recommend-btn:hover, .btn:hover, .recommendations-table td a:hover, button:hover {
+            background: linear-gradient(135deg, #ffb6d5 0%, #ffd1e6 100%) !important;
+            border-color: #ffb6d5 !important;
+            color: #b23a48 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 182, 213, 0.3);
+        }
+        .analyze-btn:active, .recommend-btn:active, .btn:active, .recommendations-table td a:active, button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(255, 182, 213, 0.2);
+        }
+        .analyze-btn:disabled, .recommend-btn:disabled, .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Results styles */
+        .results {
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .result-card {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #bae6fd;
+            animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .result-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+        .result-confidence {
+            font-size: 1rem;
+            color: #475569;
+            font-weight: 500;
+        }
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 4px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Recommendations Modal styles */
+        .modal-content {
+            background: rgba(255, 255, 255, 0.99);
+            border-radius: 24px;
+            border: 1px solid var(--secondary-pink);
+        }
+        .modal-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+        }
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .modal-body {
+            padding: 1.5rem;
+        }
+        .recommendations-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            margin-top: 20px;
+        }
+        .recommendations-table th,
+        .pink-table th {
+            background: linear-gradient(135deg, #ffd1e6 0%, #ffeaf4 100%) !important;
+            color: #b23a48 !important;
+            border: none !important;
+            padding: 1.5rem 2rem !important;
+            font-weight: 600 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+            font-size: 1rem !important;
+            text-align: left !important;
+            position: relative !important;
+            white-space: nowrap !important;
+            box-shadow: none !important;
+        }
+        .recommendations-table td {
+            background: #fff6fa;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+        .recommendations-table tr:hover td {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .product-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .product-type {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        .product-price {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .product-rating {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .star {
+            color: #fbbf24;
+        }
+        .budget-input {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .budget-input label {
+            display: block;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+        .budget-input input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .budget-input input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .modal-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-transition.fade {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .modal-transition.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .recommend-btn {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            .title {
+                font-size: 2rem;
+            }
+            #uploaded-image-preview {
+                width: 240px;
+                height: 240px;
+            }
+            .modal-dialog {
+                margin: 10px;
+            }
+        }
+        .recommendations-section, .table-container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+            border-radius: 16px;
+            overflow-x: auto;
+        }
+        .table {
+            width: 100%;
+            min-width: 0;
+            border-radius: 12px;
+            box-shadow: none;
+            background: rgba(255,255,255,0.99);
+            table-layout: fixed;
+            word-break: break-word;
+        }
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem 2rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 1rem;
+            text-align: left;
+            position: relative;
+            white-space: nowrap;
+        }
+        .table thead th:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 25%;
+            height: 50%;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .table tbody td {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        .table tbody tr {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.08);
+            transform: scale(1.01);
+        }
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .table tbody td:first-child {
+            font-weight: 600;
+        }
+        .section-title {
+            color: var(--text-primary);
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .icon {
+            font-size: 1.5rem;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+        @media (max-width: 768px) {
+            .recommendations-section {
+                padding: 1.5rem;
+                margin: 1rem 0;
+            }
+            .table thead th,
+            .table tbody td {
+                padding: 1rem 1.5rem;
+                font-size: 0.9rem;
+            }
+        }
+        .table tbody td a {
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .table tbody td a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+        .btn-outline-primary {
+            color: #b23a48 !important;
+            border: 2px solid #ffd1e6 !important;
+            background: transparent !important;
+        }
+        .btn-outline-primary:hover {
+            background: linear-gradient(135deg, #ffd1e6 0%, #ffeaf4 100%) !important;
+            color: #b23a48 !important;
+            border-color: #ffd1e6 !important;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .product-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .product-category-badge {
+            background: var(--accent-pink);
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .product-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.2;
+        }
+
+        .product-brand {
+            font-size: 1rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .product-rating-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #475569;
+            font-size: 0.95rem;
+        }
+
+        .product-star {
+            color: #fbbf24;
+            font-size: 1.1rem;
+        }
+
+        .product-price-display {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: auto; /* Pushes price to the bottom */
+        }
+
+        .product-shop-button {
+            background: var(--accent-pink);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 10px rgba(255, 182, 213, 0.3);
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+
+        .product-shop-button:hover {
+            background: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 182, 213, 0.4);
+        }
+
+        .product-shop-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(255, 182, 213, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Add footer styles */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.99);
+            border-top: 1px solid var(--glass-border);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        .footer p {
+            margin: 5px 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .footer .disclaimer {
+            font-size: 0.8rem;
+            color: #666;
+            max-width: 800px;
+            margin: 10px auto;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    <div class="container">
+        <div class="header">
+            <div class="title">Noor.Ai</div>
+            <div class="subtitle">Your Personalized AI Beauty & Skincare Advisor</div>
+        </div>
+        <!-- Upload Section -->
+        <div id="analysis-instructions">
+            <h2 style="font-size: 2rem; font-weight: 700; color: #b23a48; margin-bottom: 10px;">Step 1: Skin Analysis</h2>
+            <p style="font-size: 1.1rem; color: #475569;">Upload a clear, makeup-free photo for our AI to analyze your skin type</p>
+        </div>
+        <div class="upload-section" id="upload-section">
+            <div class="upload-area" id="upload-area">
+                <input type="file" id="file-input" accept="image/jpeg, image/png, image/jpg">
+                <img id="uploaded-image-preview" src="#" alt="Image Preview">
+                <div id="upload-instructions">
+                    <p class="main-text">Upload Your Photo</p>
+                    <p class="sub-text">Click to select &bull; JPG, PNG up to 10MB</p>
+                </div>
+            </div>
+
+            <div class="upload-right-section">
+                <h3 class="instructions-title">For best results:</h3>
+                <div class="instruction-item">
+                    <strong>Make sure you have no makeup on - </strong>
+                    <span>As a clean, makeup-free face helps with accurate analysis</span>
+                </div>
+                <div class="instruction-item">
+                    <strong>Ensure that there is good lighting - </strong>
+                    <span>Natural daylight works best</span>
+                </div>
+                <div class="instruction-item">
+                    <strong>Try facing the camera directly - </strong>
+                    <span>Look straight at the camera</span>
+                </div>
+                <div class="instruction-item">
+                    <strong>Fill the frame - </strong>
+                    <span>Your face should take up most of the photo</span>
+                </div>
+                <div class="privacy-note">
+                    <strong>Privacy:</strong> Your photos are analyzed securely and automatically deleted after processing. We never store or share your images.
+                </div>
+            </div>
+        </div>
+
+        <button class="upload-btn" id="upload-photo-btn">Upload Photo</button>
+        <!-- Analysis Button -->
+        <button class="analyze-btn" id="analyze-btn" onclick="predict()" disabled style="margin-top: 20px;">
+            <div class="btn-text">
+                <div class="loading-spinner" id="loading-spinner"></div>
+                <span id="btn-text">Analyze Skin Type</span>
+            </div>
+        </button>
+        <!-- Update Picture Button -->
+        <button class="analyze-btn" id="update-picture-btn" onclick="resetUploadArea()" style="display:none; margin-top: 10px;">
+            <div class="btn-text">
+                <span>Update Picture</span>
+            </div>
+        </button>
+        <!-- Step 2: Your Skin Analysis Results -->
+        <div id="analysis-results-heading" style="display: none; text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 2rem; font-weight: 700; color: #b23a48; margin-bottom: 10px;">Step 2: Your Skin Analysis Results</h2>
+            <p style="font-size: 1.1rem; color: #475569;">Here's what our AI discovered about your skin.</p>
+        </div>
+        <!-- Results Section -->
+        <div class="results" id="results"></div>
+        <!-- Recommendations Section (initially hidden) -->
+        <div id="recommendations" class="recommendations-section" style="display: none;">
+            <h2 class="section-title">
+                <span class="icon">🎁</span> Recommended Products for Your Skin Type
+            </h2>
+            <button id="download-csv-btn" class="download-btn" style="margin-top: 15px; margin-bottom: 25px; background: #b23a48; color: #fff; border: none; padding: 12px 25px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background 0.2s ease;">
+                Download My Recommended Skincare Products
+            </button>
+            <div class="product-grid" id="recommendationsGrid">
+            </div>
+        </div>
+    </div>
+    <footer class="footer">
+        <p>Noor.ai - Created by Shafaq Mandha</p>
+        <p class="disclaimer">Disclaimer: This web application was built as an academic project and should not be used to replace a dermatologist in any way.</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configuration
+        const MODEL_URL = "/model.json";
+        const METADATA_URL = "/metadata.json";
+        
+        let model, image;
+        let currentSkinType = null;
+
+        // Get DOM elements
+            const fileInput = document.getElementById('file-input');
+            const uploadSection = document.getElementById('upload-section');
+            const uploadArea = document.getElementById('upload-area');
+            const uploadedImagePreview = document.getElementById('uploaded-image-preview');
+            const uploadInstructions = document.getElementById('upload-instructions');
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const updatePictureBtn = document.getElementById('update-picture-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const btnText = document.getElementById('btn-text');
+        const results = document.getElementById('results');
+        const recommendationsSection = document.getElementById('recommendations');
+        const recommendationsTableBody = document.getElementById('recommendationsTableBody');
+        const recommendationsGrid = document.getElementById('recommendationsGrid');
+        const uploadPhotoButton = document.getElementById('upload-photo-btn');
+        const priceRangeInput = document.getElementById('price-range');
+        const priceRangeValue = document.getElementById('price-range-value');
+        const productTypeSelect = document.getElementById('product-type');
+
+        // Update price range value display
+        if (priceRangeInput && priceRangeValue) {
+            priceRangeInput.addEventListener('input', () => {
+                priceRangeValue.textContent = `$0 - $${priceRangeInput.value}`;
+            });
+        }
+
+        // Trigger recommendations update on filter change
+        if (priceRangeInput) {
+            priceRangeInput.addEventListener('change', getRecommendations);
+        }
+        if (productTypeSelect) {
+            productTypeSelect.addEventListener('change', getRecommendations);
+        }
+
+        // Make the entire upload area clickable
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // File input handler
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        // New 'Upload Photo' button functionality
+        if (uploadPhotoButton) {
+            uploadPhotoButton.addEventListener('click', () => {
+                fileInput.click(); // Trigger the file input when the button is clicked
+            });
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please select a valid image file (JPG, PNG, etc.)');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File size must be less than 10MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedImagePreview.src = e.target.result;
+                uploadedImagePreview.style.display = 'block';
+                uploadInstructions.style.display = 'none';
+
+                analyzeBtn.style.display = 'block';
+                analyzeBtn.disabled = false;
+                updatePictureBtn.style.display = 'block';
+                uploadPhotoButton.style.display = 'none';
+                
+                image = new Image();
+                image.src = e.target.result;
+                image.onload = function() {
+                    console.log('Image loaded successfully');
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function loadModel() {
+            try {
+                if (model) {
+                    console.log('Model already loaded');
+                    return;
+                }
+
+                console.log('Loading AI model...');
+                if (typeof tmImage === 'undefined') {
+                    throw new Error('Teachable Machine library not loaded');
+                }
+                
+                model = await tmImage.load(MODEL_URL, METADATA_URL);
+                console.log('Model loaded successfully!');
+                console.log('Model classes:', model.getClassLabels());
+                
+            } catch (error) {
+                console.error('Model loading error:', error);
+                showError(`Failed to load AI model: ${error.message}`);
+                throw error;
+            }
+        }
+
+        async function predict() {
+            if (!image) {
+                showError("Please upload an image first");
+                return;
+            }
+
+            // Hide upload section, analyze button, and update picture button
+            uploadSection.style.display = 'none';
+            analyzeBtn.style.display = 'none';
+            updatePictureBtn.style.display = 'none';
+            document.getElementById('analysis-instructions').style.display = 'none'; // Hide analysis instructions
+            document.getElementById('analysis-results-heading').style.display = 'none'; // Ensure Step 2 is hidden initially or on re-prediction
+
+            // Reset UI state
+            analyzeBtn.disabled = true; 
+            loadingSpinner.style.display = 'block';
+            btnText.textContent = 'Analyzing...';
+            results.innerHTML = '';
+            recommendationsSection.style.display = 'none';
+
+            try {
+                if (!model) {
+                    await loadModel();
+                }
+
+                if (!model) {
+                    throw new Error("Model could not be loaded");
+                }
+
+                const predictions = await model.predict(image);
+                const topPrediction = predictions.reduce((max, p) =>
+                    p.probability > max.probability ? p : max
+                );
+
+                // Normalize skin type by trimming and mapping to backend values
+                const skinTypeMap = {
+                    'Dry Skin': 'Dry',
+                    'Normal Skin': 'Normal',
+                    'Normal Skin ': 'Normal',
+                    'Oily Skin': 'Oily'
+                };
+                currentSkinType = skinTypeMap[topPrediction.className.trim()] || topPrediction.className.trim();
+                const confidence = (topPrediction.probability * 100).toFixed(1);
+
+                showResult(topPrediction.className.trim(), confidence);
+                document.getElementById('analysis-results-heading').style.display = 'block'; // Show Step 2 when results are ready
+
+            } catch (error) {
+                console.error('Prediction error:', error);
+                showError(error.message);
+            } finally {
+                loadingSpinner.style.display = 'none';
+                btnText.textContent = 'Analyze Skin Type';
+            }
+        }
+
+        function showResult(skinType, confidence) {
+            const emoji = getSkinTypeEmoji(skinType);
+            
+            results.innerHTML = `
+                <div class="result-card">
+                    <div class="result-icon">${emoji}</div>
+                    <div class="result-title">${skinType}</div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${confidence}%"></div>
+                    </div>
+                    <div class="result-confidence">Confidence: ${confidence}%</div>
+                    <div class="mt-3">
+                        <button class="recommend-btn" onclick="getRecommendations()">
+                            <div class="btn-text">
+                                <span>Get Product Recommendations</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            results.innerHTML = `
+                <div class="result-card error-card">
+                    <div class="result-icon">⚠️</div>
+                    <div class="result-title">Error</div>
+                    <div class="result-confidence">${message}</div>
+                </div>
+            `;
+        }
+
+        function getSkinTypeEmoji(skinType) {
+            const emojiMap = {
+                'Dry Skin': '🏜️',
+                'Normal Skin': '✨',
+                'Oily Skin': '💧'
+            };
+            return emojiMap[skinType] || '🔍';
+        }
+
+        async function getRecommendations() {
+            if (!currentSkinType) {
+                showError("Please analyze your skin type first");
+                return;
+            }
+
+            const priceRange = priceRangeInput ? priceRangeInput.value : null;
+            const productType = productTypeSelect ? productTypeSelect.value : 'All Types';
+            
+            // Show loading state
+            recommendationsGrid.innerHTML = `
+                <div class="text-center py-4">
+                        <div class="loading-spinner" style="display: inline-block;"></div>
+                        <div class="mt-2">Finding your perfect products...</div>
+                </div>
+            `;
+
+            recommendationsSection.style.display = 'block';
+            recommendationsSection.scrollIntoView({ behavior: 'smooth' });
+
+            // Hide Step 2 heading when recommendations are shown
+            document.getElementById('analysis-results-heading').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/recommendations', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    body: JSON.stringify({
+                        skin_type: currentSkinType,
+                        max_price: priceRange ? parseFloat(priceRange) : null,
+                        product_type: productType !== 'All Types' ? productType : null
+                    })
+                    });
+
+                    const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (!data.recommendations || data.recommendations.length === 0) {
+                    recommendationsGrid.innerHTML = `
+                        <div class="text-center py-4">
+                                <div class="result-icon">🔍</div>
+                                <div class="result-title mt-2">No products found</div>
+                                <div class="result-confidence">Try adjusting your budget or preferences</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Display recommendations
+                recommendationsGrid.innerHTML = '';
+                        data.recommendations.forEach(product => {
+                    const productLink = product['Available at'] || '#';
+                    const productCard = document.createElement('div');
+                    productCard.className = 'product-card';
+                    productCard.innerHTML = `
+                        <div class="product-category-badge">${product.Label}</div>
+                        <div class="product-title">${product.name}</div>
+                        <div class="product-brand">${product.brand}</div>
+                        <div class="product-rating-container">
+                            <span class="product-star">⭐</span> ${product.rank.toFixed(1)} (${product.num_reviews || 0})
+                        </div>
+                        <div class="product-price-display">$${product.price.toFixed(2)}</div>
+                        <a href="${productLink}" target="_blank" rel="noopener noreferrer" class="product-shop-button">
+                            Shop for the product here
+                        </a>
+                    `;
+                    recommendationsGrid.appendChild(productCard);
+                });
+
+                // Display the recommendations section
+                recommendationsSection.style.display = 'block';
+
+                showNoorChatbotWidget(data.recommendations);
+
+                // Disable the results card and the Get Product Recommendations button after successful display
+                results.style.display = 'none';
+                const recommendButton = document.querySelector('.recommend-btn');
+                if (recommendButton) {
+                    recommendButton.disabled = true;
+                }
+
+            } catch (error) {
+                console.error('Error getting recommendations:', error);
+                recommendationsGrid.innerHTML = `
+                    <div class="text-center py-4">
+                            <div class="result-icon">⚠️</div>
+                            <div class="result-title mt-2">Error Loading Recommendations</div>
+                            <div class="result-confidence">${error.message}</div>
+                    </div>
+                `;
+                // Re-enable results display and button on error
+                results.style.display = 'block';
+                const recommendButton = document.querySelector('.recommend-btn');
+                if (recommendButton) {
+                    recommendButton.disabled = false;
+                }
+            }
+            finally {
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+        // New function to reset the upload area
+        function resetUploadArea() {
+            uploadedImagePreview.style.display = 'none';
+            uploadInstructions.style.display = 'flex';
+            analyzeBtn.style.display = 'none';
+            updatePictureBtn.style.display = 'none';
+            uploadPhotoButton.style.display = 'block';
+            fileInput.value = '';
+            results.innerHTML = '';
+            results.style.display = 'block'; // Re-enable results display
+            const recommendButton = document.querySelector('.recommend-btn');
+            if (recommendButton) {
+                recommendButton.disabled = false;
+            }
+            image = null;
+            recommendationsSection.style.display = 'none';
+            uploadSection.style.display = 'block';
+            analyzeBtn.disabled = true;
+            document.getElementById('analysis-instructions').style.display = 'block'; // Show instructions on reset
+            document.getElementById('analysis-results-heading').style.display = 'none'; // Hide Step 2 on reset
+        }
+
+        // Noor chatbot widget function (lighter pink/white)
+        function showNoorChatbotWidget(recommendedProducts) {
+            document.getElementById('analysis-instructions').style.display = 'none'; // Hide instructions when chatbot appears
+            if (document.getElementById('noor-chatbot-widget')) return; // Prevent duplicates
+            const chatbotHTML = `
+            <div id="noor-chatbot-widget" style="position: fixed; bottom: 24px; right: 24px; z-index: 1000; font-family: 'Inter', sans-serif;">
+                <div id="noor-chatbot-header" style="background: linear-gradient(135deg, #ffd1e6 0%, #ffeaf4 100%); color: #b23a48; padding: 12px 20px; border-radius: 16px 16px 0 0; font-weight: 700; cursor: pointer; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Chat with Noor</span>
+                    <span id="noor-chat-status" style="font-size: 0.8rem; font-weight: normal;">Online</span>
+                </div>
+                <div id="noor-chatbot-body" style="display: none; background: #fff; border: 2px solid #ffd1e6; height: 500px; width: 380px; border-radius: 0 0 16px 16px; box-shadow: 0 8px 32px rgba(255,182,213,0.15);">
+                    <div id="noor-chat-messages" style="height: 420px; overflow-y: auto; padding: 16px;"></div>
+                    <div style="padding: 12px; border-top: 1px solid #ffd1e6; display: flex; gap: 8px;">
+                        <input type="text" id="noor-chat-input" style="flex-grow: 1; padding: 10px; border-radius: 8px; border: 1px solid #ffd1e6; font-size: 1rem;" placeholder="Type your message...">
+                        <button id="noor-send-button" onclick="sendNoorMessage()" style="background: #ffd1e6; color: #b23a48; border: none; border-radius: 8px; padding: 10px 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;">
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', chatbotHTML);
+            
+            const chatHeader = document.getElementById('noor-chatbot-header');
+            const chatBody = document.getElementById('noor-chatbot-body');
+            const chatInput = document.getElementById('noor-chat-input');
+            const sendButton = document.getElementById('noor-send-button');
+            const chatStatus = document.getElementById('noor-chat-status');
+            
+            chatHeader.addEventListener('click', function() {
+                chatBody.style.display = chatBody.style.display === 'none' ? 'block' : 'none';
+            });
+            
+            window.recommendedProductsForNoor = recommendedProducts;
+            
+            window.sendNoorMessage = async function() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+                
+                // Disable input and button while processing
+                chatInput.disabled = true;
+                sendButton.disabled = true;
+                chatStatus.textContent = 'Typing...';
+                
+                // Add user message
+                addNoorMessage('You: ' + message, 'user');
+                chatInput.value = '';
+                
+                try {
+                    const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        recommended_products: window.recommendedProductsForNoor
+                    })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    
+                    const data = await response.json();
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    addNoorMessage('Noor: ' + data.response, 'bot');
+                } catch (error) {
+                    console.error('Chat error:', error);
+                    addNoorMessage('Sorry, I encountered an error. Please try again.', 'error');
+                } finally {
+                    // Re-enable input and button
+                    chatInput.disabled = false;
+                    sendButton.disabled = false;
+                    chatStatus.textContent = 'Online';
+                    chatInput.focus();
+                }
+            };
+            
+            window.addNoorMessage = function(message, type) {
+                const messagesDiv = document.getElementById('noor-chat-messages');
+                const messageElement = document.createElement('div');
+                messageElement.style.marginBottom = '10px';
+                messageElement.style.padding = '8px 12px';
+                messageElement.style.borderRadius = '8px';
+                messageElement.style.maxWidth = '85%';
+                messageElement.style.wordBreak = 'break-word';
+                messageElement.style.animation = 'fadeIn 0.3s ease-in-out';
+                
+                if (type === 'user') {
+                    messageElement.style.backgroundColor = '#ffeaf4';
+                    messageElement.style.marginLeft = '15%';
+                    messageElement.style.textAlign = 'right';
+                } else if (type === 'bot') {
+                    messageElement.style.backgroundColor = '#fff6fa';
+                    messageElement.style.marginRight = '15%';
+                    messageElement.style.textAlign = 'left';
+                    } else {
+                    messageElement.style.backgroundColor = '#ffebee';
+                    messageElement.style.color = '#b23a48';
+                    messageElement.style.textAlign = 'center';
+                    messageElement.style.margin = '0 auto';
+                }
+                
+                messageElement.textContent = message;
+                messagesDiv.appendChild(messageElement);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            };
+            
+            // Add keypress event listener for Enter key
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendNoorMessage();
+                }
+            });
+            
+            // Add hover effect to send button
+            sendButton.addEventListener('mouseover', function() {
+                this.style.backgroundColor = '#ffb6c1';
+            });
+            
+            sendButton.addEventListener('mouseout', function() {
+                this.style.backgroundColor = '#ffd1e6';
+            });
+            
+            // Function to download recommendations as CSV
+            window.downloadRecommendationsAsCsv = function() {
+                if (!window.recommendedProductsForNoor || window.recommendedProductsForNoor.length === 0) {
+                    alert("No recommendations to download.");
+                    return;
+                }
+
+                const recommendations = window.recommendedProductsForNoor;
+                let csvContent = "Category,Brand,Name,Price,Rating,Available At\n";
+
+                recommendations.forEach(product => {
+                    const category = product.Label || '';
+                    const brand = product.brand || '';
+                    const name = product.name || '';
+                    const price = product.price ? product.price.toFixed(2) : '';
+                    const rank = product.rank ? product.rank.toFixed(1) : '';
+                    const availability = product['Available at'] || '';
+
+                    csvContent += `${category},${brand},${name},${price},${rank},${availability}\n`;
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                if (link.download !== undefined) { // feature detection
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', 'my recommended skincare products.csv');
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    // Redirect to thank you page after download
+                    setTimeout(() => {
+                        window.location.href = '/thank_you';
+                    }, 100); // Small delay to ensure download initiates
+                }
+            };
+
+            // Attach click event to the download button
+            document.getElementById('download-csv-btn').addEventListener('click', window.downloadRecommendationsAsCsv);
+            
+            // Add initial welcome message
+            addNoorMessage("Noor: Hi! I'm Noor, your AI beauty assistant. Ask me anything about your recommended products or skincare!", 'bot');
+            
+            // Add CSS animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('AI Beauty Advisor initialized');
+
+            // Set a flag in sessionStorage when legitimately navigating to this page
+            const fromLandingPage = sessionStorage.getItem('fromLandingPage');
+            if (fromLandingPage === 'true') {
+                // If coming from landing page, clear the flag
+                sessionStorage.removeItem('fromLandingPage');
+            } else if (performance.navigation.type === 1 || performance.navigation.type === 0) { // Type 1: reload, Type 0: navigate
+                // If refreshed or directly accessed and not marked as from landing page, redirect
+                window.location.replace('/'); // Redirect to landing page
+                return;
+            }
+            
+            // Ensure initial state
+            uploadedImagePreview.style.display = 'none';
+            uploadInstructions.style.display = 'flex'; // Make sure instructions are visible
+            analyzeBtn.style.display = 'none';
+            updatePictureBtn.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
