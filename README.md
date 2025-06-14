@@ -1,16 +1,26 @@
 # 🌸 Noor.AI – AI-Powered Skincare Assistant
 
-**Noor.AI** is an AI-powered skincare assistant designed to deliver personalized beauty advice through facial analysis, skin type classification, product recommendation, and chatbot support. This project combines machine learning, web development, and user experience design into one seamless skincare solution.
+**Noor.AI** is an AI-powered skincare assistant designed to deliver personalised beauty advice through facial analysis, skin type classification, product recommendation, and chatbot support. This project combines machine learning, web development, and user experience design into one seamless skincare solution.
 
 > ⚠️ *This application is for academic and educational use only. It is not a substitute for professional medical or dermatological advice.*
 
 ---
 
+## 🌐 Live Demo & Feedback
+
+🔗 **Access the application here:** [Noor.AI Web App](https://noor-ai.onrender.com)  
+📝 **Share your thoughts:** [Feedback Form](https://forms.gle/Pvqz7QMMYAD6cUSi6)
+
+---
+
 ## 🚀 Deployment Overview
 
-📁 **`Noor_AI_Deployment_Files/`**  
-This folder contains all finalized, cleaned, and structured files used during the deployment process.  
+📁 **`Noor_AI_Deployment_Files`**  
+This folder contains all finalised, cleaned, and structured files used during the deployment process.  
 It follows a consistent structure inspired by the **AI Beauty Advisor** module and integrates all key components (backend, models, UI, and assets) in a format ready for hosting or deployment.
+
+In order to deploy the project on [Render](https://render.com), I had to commit the finalised and cleaned deployment-ready files to a **separate new repository**. This ensured a lightweight, organised structure optimised for hosting, with only the essential components needed for running the application. The same code files are saved under the **`Noor_AI_Deployment_Files`** folder 
+
 
 ---
 
@@ -40,7 +50,7 @@ Before preparing for deployment, each module was **individually developed and te
 
 ## 📁 Project Structure
 
-### 1. `Noor_AI_Deployment_Files/`  
+### 1. `Noor_AI_Deployment_Files`  
 - Final deployment build with:
   - UI files (HTML/CSS)
   - `app.py` (Flask backend)
@@ -51,7 +61,7 @@ Before preparing for deployment, each module was **individually developed and te
 ---
 
 ### 2. AI Beauty Advisor  
-Provides personalized skincare suggestions based on facial analysis.
+Provides personalised skincare suggestions based on facial analysis.
 
 **Key Files:**
 - `AI Beauty Advisor.html` – Frontend interface  
@@ -107,7 +117,7 @@ Conversational interface for skincare advice.
 
 ## 📌 Notes
 
-- This project is optimized for use on desktop or tablet devices.  
+- This project is optimised for use on desktop or tablet devices.  
 - Some features (e.g., chatbot and facial analysis) require an active internet connection and may use external APIs or model libraries.  
 - Make sure `.env` is configured properly before running the chatbot.
 
@@ -117,4 +127,3 @@ Conversational interface for skincare advice.
 
 - **License:** Educational Use Only  
 - **Disclaimer:** Noor.AI is not intended to diagnose or treat any skin condition. Always consult with a licensed dermatologist for skin-related concerns.
-
