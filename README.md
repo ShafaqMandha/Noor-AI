@@ -1,71 +1,120 @@
-# Noor.AI
+# 🌸 Noor.AI – AI-Powered Skincare Assistant
 
-Noor.AI is an AI-powered skincare assistant project designed to provide personalised beauty advice, analyse skin types, and recommend suitable skincare products. The project is organised into four main modules, each focusing on a specific aspect of the skincare experience.
+**Noor.AI** is an AI-powered skincare assistant designed to deliver personalized beauty advice through facial analysis, skin type classification, product recommendation, and chatbot support. This project combines machine learning, web development, and user experience design into one seamless skincare solution.
 
----
-
-## Project Structure and File Overview
-
-### 1. AI Beauty Advisor  
-This module offers personalised beauty advice based on AI analysis. A module combining facial analysis and skincare product recommendation features.
-
-- **AI Beauty Advisor.html** — Frontend interface for the beauty advisor.
-- **app.py** — Python backend application that runs the AI logic.
-- **cosmetic_p.csv** — Dataset of cosmetic products used by the system.
-- **metadata.json** — Model metadata required for AI inference.
-- **model.json** — AI model architecture.
-- **requirements.txt** — List of Python dependencies needed to run this module.
-- **server.py** — Backend server script.
-- **weights.bin** — Pre-trained model weights for the AI.
+> ⚠️ *This application is for academic and educational use only. It is not a substitute for professional medical or dermatological advice.*
 
 ---
 
-### 2. Skin Type Analysis  
-This module uses machine learning to classify skin types based on images.
+## 🚀 Deployment Overview
 
-- **AI Skin Analysis.html** — Web interface for uploading user images.
-- **metadata.json** — Metadata for the skin classification model.
-- **model.json** — Model structure used for skin analysis.
-- **weights.bin** — Trained weights of the skin classification model.
-- **Skin Types Dataset for ML training/** — Image dataset used for training the skin type classifier.
-- **Noor.AI – Skin Analysis Feature Development Report.pdf** — Detailed documentation of the skin analysis process, including its design, features, and implementation.
+📁 **`Noor_AI_Deployment_Files/`**  
+This folder contains all finalized, cleaned, and structured files used during the deployment process.  
+It follows a consistent structure inspired by the **AI Beauty Advisor** module and integrates all key components (backend, models, UI, and assets) in a format ready for hosting or deployment.
 
 ---
 
-### 3. Skincare Product Recommendation  
-This module suggests personalized skincare products based on user inputs and preferences.
+## ✅ Testing & Development Process
 
-- **Beauty Matchmaker.html** — Web interface for selecting skincare concerns.
-- **app.py** — Backend code that filters and recommends products.
-- **cosmetic_p.csv** — Enhanced product dataset with recommendation logic.
-- **Noor.AI - Skincare Product Recommendation Feature Development Report.pdf** — Detailed documentation of the skincare product recommendation system's design, features, and implementation.
-- **requirements.txt** — Required Python packages to run this recommendation system.
+Before preparing for deployment, each module was **individually developed and tested** to ensure proper functionality:
 
----
+1. **Individual Testing Phase**  
+   Each core component—**AI Beauty Advisor**, **Skin Type Analysis**, **Product Recommendation**, and **Chatbot**—was tested as a standalone feature.  
+   - ✅ Facial analysis was tested for accuracy using local model predictions  
+   - ✅ Skin type classification was trained and tested using a dataset in Google Colab  
+   - ✅ Product recommendation logic was tested with various user inputs  
+   - ✅ Chatbot functionality and response flow were tested with dynamic queries  
 
-### 4. Chatbot  
-This module adds a conversational interface to interact with users and provide skincare advice.
+   📄 *Detailed documentation for each component is available in its respective folder.*
 
-- **templates/** — Contains HTML files for the chatbot's user interface.
-- **app.py** — Flask backend application handling chatbot logic.
-- **.env** — Environment file containing configuration variables (e.g., API keys).
-- **cosmetic_p.xlsx** — Skincare product dataset used in chatbot responses.
-- **Noor.AI – Skincare Chatbot Feature Development Report.pdf** — Detailed documentation of the chatbot's design, features, and implementation.
-- **requirements.txt** — Python dependencies for the chatbot module.
+2. **Integration Phase**  
+   Once individual testing was complete, modules were combined to test:
+   - Inter-module compatibility
+   - Data flow across features (e.g., using skin type in product filtering)
+   - Interface consistency
 
----
-
-## Technologies Used
-
-- Python (Flask, Pandas, NumPy)
-- HTML/CSS
-- TensorFlow & Teachable Machine
-- Google Colab
-- Git & GitHub
+3. **Deployment File Preparation**  
+   The final deployment-ready files were organized into `Noor_AI_Deployment_Files`, maintaining a clean structure for easy hosting or presentation.
 
 ---
 
-## License
+## 📁 Project Structure
 
-This project is developed for academic and educational use only. Not intended for commercial distribution. 
-This project does not replace a dermatologist or a doctor in any way, for skincare advice, always refer to a doctor in advance.
+### 1. `Noor_AI_Deployment_Files/`  
+- Final deployment build with:
+  - UI files (HTML/CSS)
+  - `app.py` (Flask backend)
+  - ML model files: `model.json`, `weights.bin`, `metadata.json`
+  - Datasets used: `cosmetic_p.csv` and others
+  - `requirements.txt` for environment setup
+
+---
+
+### 2. AI Beauty Advisor  
+Provides personalized skincare suggestions based on facial analysis.
+
+**Key Files:**
+- `AI Beauty Advisor.html` – Frontend interface  
+- `app.py`, `server.py` – Backend logic  
+- Pre-trained ML files (`model.json`, `weights.bin`)  
+- `cosmetic_p.csv` – Skincare product dataset  
+- 📄 `Noor.AI – Beauty Advisor Feature Development Report.pdf`
+
+---
+
+### 3. Skin Type Analysis  
+Classifies user skin type using ML models trained on image data.
+
+**Key Files:**
+- `AI Skin Analysis.html` – Upload-based interface  
+- Trained model files  
+- `Skin Types Dataset for ML training/`  
+- 📄 `Noor.AI – Skin Analysis Feature Development Report.pdf`
+
+---
+
+### 4. Skincare Product Recommendation  
+Filters and recommends skincare products based on user needs.
+
+**Key Files:**
+- `Beauty Matchmaker.html` – User input interface  
+- `app.py` – Recommendation logic  
+- `cosmetic_p.csv` – Enhanced dataset  
+- 📄 `Noor.AI - Skincare Product Recommendation Feature Development Report.pdf`
+
+---
+
+### 5. Chatbot  
+Conversational interface for skincare advice.
+
+**Key Files:**
+- `templates/` – HTML interface for the chatbot  
+- `app.py` – Chatbot backend (Flask)  
+- `.env` – API key management  
+- `cosmetic_p.xlsx` – Dataset for chatbot responses  
+- 📄 `Noor.AI – Skincare Chatbot Feature Development Report.pdf`
+
+---
+
+## 💻 Technologies Used
+
+- **Languages/Frameworks:** Python (Flask), HTML, CSS  
+- **ML/AI Tools:** TensorFlow, Teachable Machine, Google Colab  
+- **Libraries:** Pandas, NumPy  
+- **Tools:** GitHub, VS Code
+
+---
+
+## 📌 Notes
+
+- This project is optimized for use on desktop or tablet devices.  
+- Some features (e.g., chatbot and facial analysis) require an active internet connection and may use external APIs or model libraries.  
+- Make sure `.env` is configured properly before running the chatbot.
+
+---
+
+## 📄 License & Disclaimer
+
+- **License:** Educational Use Only  
+- **Disclaimer:** Noor.AI is not intended to diagnose or treat any skin condition. Always consult with a licensed dermatologist for skin-related concerns.
+
